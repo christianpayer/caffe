@@ -104,9 +104,16 @@ inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
 template <typename Dtype>
 inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
     std::vector<int> shape) {
+  // fill shape with 1 to create tensors with at least 4 dimensions
+  // to prevent CUDNN_STATUS_BAD_PARAM error
+  // TODO(christian.payer@gmx.net): probably fixed in newer versions of CUDNN
+  for (unsigned int i = shape.size(); i < 4; ++i) {
+    shape.push_back(1);
+  }
+  // set up stride
   std::vector<int> stride(shape.size(), 1);
-  for(int i = stride.size()-2; i >= 0; --i) {
-    stride[i] = shape[i+1] * stride[i+1];
+  for (int i = stride.size() - 2; i >= 0; --i) {
+    stride[i] = shape[i + 1] * stride[i + 1];
   }
   setTensorNdDesc<Dtype>(desc, shape, stride);
 }
