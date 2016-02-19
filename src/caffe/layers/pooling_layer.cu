@@ -174,16 +174,16 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
+        input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1], kernel_shape_[0],
+        kernel_shape_[1], stride_[0], stride_[1], pad_[0], pad_[1], top_data,
         mask, top_mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
+        input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1], kernel_shape_[0],
+        kernel_shape_[1], stride_[0], stride_[1], pad_[0], pad_[1], top_data);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (this->phase_ == TRAIN) {
@@ -194,16 +194,16 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
                                    CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_,
+          input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1], kernel_shape_[0],
+          kernel_shape_[1], stride_[0], stride_[1],
           rand_idx_.mutable_gpu_data(), top_data);
     } else {
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
                                   CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_, top_data);
+          input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1], kernel_shape_[0],
+          kernel_shape_[1], stride_[0], stride_[1], top_data);
     }
     break;
   default:
@@ -354,23 +354,23 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, mask, top_mask, top[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_,
-        kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
+        input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1],
+        kernel_shape_[0], kernel_shape_[1], stride_[0], stride_[1], pad_[0], pad_[1],
         bottom_diff);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
+        input_shape_[0], input_shape_[1], pooled_shape_[0], pooled_shape_[1], kernel_shape_[0],
+        kernel_shape_[1], stride_[0], stride_[1], pad_[0], pad_[1], bottom_diff);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     // NOLINT_NEXT_LINE(whitespace/operators)
     StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, rand_idx_.gpu_data(), top_diff,
-        top[0]->num(), channels_, height_, width_, pooled_height_,
-        pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
+        top[0]->num(), channels_, input_shape_[0], input_shape_[1], pooled_shape_[0],
+        pooled_shape_[1], kernel_shape_[0], kernel_shape_[1], stride_[0], stride_[1],
         bottom_diff);
     break;
   default:
