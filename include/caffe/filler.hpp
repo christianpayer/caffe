@@ -208,11 +208,11 @@ class MSRAFiller : public Filler<Dtype> {
 };
 
 /*!
-@brief Fills a Blob with coefficients for bilinear interpolation.
+@brief Fills a Blob with coefficients for linear interpolation.
 
 A common use case is with the DeconvolutionLayer acting as upsampling.
-You can upsample a feature map with shape of (B, C, H, W) by any integer factor
-using the following proto.
+You can upsample a feature map with shape of (B, C, S_n,..., S_1) by any
+integer factor using the following proto.
 \code
 layer {
   name: "upsample", type: "Deconvolution"
@@ -229,32 +229,38 @@ layer {
 Please use this by replacing `{{}}` with your values. By specifying
 `num_output: {{C}} group: {{C}}`, it behaves as
 channel-wise convolution. The filter shape of this deconvolution layer will be
-(C, 1, K, K) where K is `kernel_size`, and this filler will set a (K, K)
-interpolation kernel for every channel of the filter identically. The resulting
-shape of the top feature map will be (B, C, factor * H, factor * W).
+(C, 1, K_n,..., K_1) where K_i is `kernel_size` in dimension i, and this filler
+will set a (K_n,..., K_i) interpolation kernel for every channel of the filter
+identically. The resulting shape of the top feature map will be
+(B, C, factor_n * S_n,..., factor_1 * S_1).
 Note that the learning rate and the
 weight decay are set to 0 in order to keep coefficient values of bilinear
 interpolation unchanged during training. If you apply this to an image, this
 operation is equivalent to the following call in Python with Scikit.Image.
 \code{.py}
-out = skimage.transform.rescale(img, factor, mode='constant', cval=0)
+out = skimage.transform.rescale(img, (factor_y, factor_x), mode='constant', cval=0)
 \endcode
  */
 template <typename Dtype>
-class BilinearFiller : public Filler<Dtype> {
+class LinearFiller : public Filler<Dtype> {
  public:
-  explicit BilinearFiller(const FillerParameter& param)
+  explicit LinearFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
-    CHECK_EQ(blob->num_axes(), 4) << "Blob must be 4 dim.";
-    CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
+    CHECK_GT(blob->num_axes(), 3) << "Blob must have at least 3 dimensions.";
     Dtype* data = blob->mutable_cpu_data();
-    int f = ceil(blob->width() / 2.);
-    float c = (2 * f - 1 - f % 2) / (2. * f);
     for (int i = 0; i < blob->count(); ++i) {
-      float x = i % blob->width();
-      float y = (i / blob->width()) % blob->height();
-      data[i] = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
+      unsigned int stride = 1;
+      Dtype weight = 1;
+      for (int axis = 0; axis < blob->num_axes() - 2; ++axis) {
+        unsigned int shape = blob->shape(axis + 2);
+        unsigned int sampling_factor = std::ceil(shape / 2.0f);
+        float center = (2 * sampling_factor - 1 - sampling_factor % 2) / (2.0f * sampling_factor);
+        float coordinate = (i / stride) % shape;
+        weight *= 1 - std::abs(coordinate / sampling_factor - center);
+        stride *= shape;
+      }
+      data[i] = weight;
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
@@ -282,8 +288,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new XavierFiller<Dtype>(param);
   } else if (type == "msra") {
     return new MSRAFiller<Dtype>(param);
-  } else if (type == "bilinear") {
-    return new BilinearFiller<Dtype>(param);
+  } else if (type == "linear") {
+    return new LinearFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
