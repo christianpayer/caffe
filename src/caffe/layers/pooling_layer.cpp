@@ -113,10 +113,6 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_EQ(2, this->num_spatial_axes_)
-      << "Pooling input must have 2 spatial axes "
-      << "(e.g., height and width). "
-      << "Use 'engine: CUDNN' for general ND pooling.";
   CHECK_EQ(bottom[0]->num_axes() - 2, num_spatial_axes_)
       << "bottom num_axes may not change.";
   channels_ = bottom[0]->shape(1);
