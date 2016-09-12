@@ -263,6 +263,20 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   delete [] workspace_bwd_filter_sizes_;
 }
 
+template <typename Dtype>
+void CuDNNConvolutionLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  LOG(FATAL) << "CuDNNConvolutionLayer does not support cpu forward. "
+                "Set engine to CAFFE.";
+}
+
+template <typename Dtype>
+void CuDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  LOG(FATAL) << "CuDNNConvolutionLayer does not support cpu backward. "
+                "Set engine to CAFFE.";
+}
+
 INSTANTIATE_CLASS(CuDNNConvolutionLayer);
 
 }   // namespace caffe
