@@ -135,6 +135,14 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::free_gpu() {
+  if (data_)
+    data_->free_gpu_data();
+  if (diff_)
+    diff_->free_gpu_data();
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
