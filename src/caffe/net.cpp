@@ -280,6 +280,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   ShareWeights();
   debug_info_ = param.debug_info();
+  free_gpu_on_forward_ = false;
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 
@@ -548,6 +549,11 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+    if (free_gpu_on_forward_) {
+      for (int j = 0; j < bottom_vecs_[i].size(); ++j) {
+        bottom_vecs_[i][j]->free_gpu();
+      }
+    }
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }

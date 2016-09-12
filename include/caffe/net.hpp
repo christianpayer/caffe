@@ -228,6 +228,10 @@ class Net {
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
+  void set_free_gpu_on_forward(const bool value) {
+    free_gpu_on_forward_ = value;
+  }
+
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
@@ -308,6 +312,7 @@ class Net {
   bool debug_info_;
   /// The root net that actually holds the shared layers in data parallelism
   const Net* const root_net_;
+  bool free_gpu_on_forward_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
