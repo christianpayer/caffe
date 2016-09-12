@@ -138,6 +138,23 @@ void* SyncedMemory::mutable_gpu_data() {
 #endif
 }
 
+void SyncedMemory::free_gpu_data() {
+#ifndef CPU_ONLY
+  to_cpu();
+  head_ = HEAD_AT_CPU;
+  if (gpu_ptr_ && own_gpu_data_) {
+    int initial_device;
+    cudaGetDevice(&initial_device);
+    if (gpu_device_ != -1) {
+      CUDA_CHECK(cudaSetDevice(gpu_device_));
+    }
+    CUDA_CHECK(cudaFree(gpu_ptr_));
+    cudaSetDevice(initial_device);
+    gpu_ptr_ = NULL;
+  }
+#endif
+}
+
 #ifndef CPU_ONLY
 void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
