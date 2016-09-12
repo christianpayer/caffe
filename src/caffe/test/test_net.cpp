@@ -592,6 +592,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "      type: 'constant' "
         "      value: 0.2 "
         "    } "
+        "    engine: CAFFE "
         "  } "
         "} "
         "layer { "
