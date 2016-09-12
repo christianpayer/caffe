@@ -18,6 +18,7 @@ template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+  BaseConvolutionLayer<Dtype>::use_col_buffer_ = false;
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];

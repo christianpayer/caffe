@@ -180,6 +180,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+  use_col_buffer_ = true;
 }
 
 template <typename Dtype>
@@ -238,7 +239,8 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       col_buffer_shape_.push_back(output_shape_[i]);
     }
   }
-  col_buffer_.Reshape(col_buffer_shape_);
+  if (use_col_buffer_)
+    col_buffer_.Reshape(col_buffer_shape_);
   bottom_dim_ = bottom[0]->count(channel_axis_);
   top_dim_ = top[0]->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
